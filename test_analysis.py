@@ -48,7 +48,7 @@ def test_kaustfishcounter_file(backend_service,
     
 
     pass_msgs = [
-        "Analysis has been added."
+        "analysis added"
     ]
 
     resp = requests.post(f"http://{backend_service}/api/analysis/", 

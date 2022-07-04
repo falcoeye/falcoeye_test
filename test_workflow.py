@@ -9,10 +9,8 @@ def test_add_workflow(backend_service,workflow_user,workflow_user_header):
     logging.info("Test: add workflow")
      
     pass_msgs = [
-        "Workflow already exist",
-        "Workflow has been added.",
-        "Successfully added Workflow",
-        "Name is already being used."
+        "name already exists",
+        "workflow added"
     ]
 
     wf = glob.glob("workflows/*.json")[0]

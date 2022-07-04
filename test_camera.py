@@ -5,9 +5,8 @@ def test_add_camera(backend_service, test_user_header):
     logging.info("Test: add camera")
      
     pass_msgs = [
-        "Camera already exist",
-        "Camera has been added",
-        "Successfully added camera"
+        "camera already exists",
+        "camera added"
     ]
     data = {
         "name": "Harbour Village Bonaire Coral Reef",
@@ -27,7 +26,7 @@ def test_list_cameras(backend_service,harbour_camera_add,test_user_header):
     logging.info("Test: list cameras")
     
     pass_msgs = [
-        "Camera data sent"
+        "camera data sent"
     ]
     resp = requests.get(f"http://{backend_service}/api/camera", 
         headers=test_user_header)
@@ -42,7 +41,7 @@ def test_get_camera_by_id(backend_service,cameras,test_user_header):
     logging.info("Test: get camera by id")
     
     pass_msgs = [
-        "Camera data sent"
+        "camera data sent"
     ]
 
     camera0 = cameras[0]
@@ -59,8 +58,7 @@ def test_delete_camera_by_id(backend_service,test_user_header):
     logging.info("Test: delete camera by id")
     
     pass_msgs = [
-        "Camera has been added",
-        "Successfully added camera"
+        "camera added"
     ]
     # To avoid cascade problem if we use harbour camera
     data = {
@@ -80,7 +78,7 @@ def test_delete_camera_by_id(backend_service,test_user_header):
     camera = resdict["camera"]
 
     pass_msgs = [
-        "Camera deleted"
+        "camera deleted"
     ]
     resp = requests.delete(f"http://{backend_service}/api/camera/{camera['id']}", 
         headers=test_user_header)

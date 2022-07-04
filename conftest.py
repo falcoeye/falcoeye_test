@@ -37,9 +37,8 @@ def register_user(backend_service):
             "password": "falcoeye-test"
     }
     pass_msgs =  [
-            "Email is already being used.",
-            "User has been registered.",
-            "Successfully registered user."
+            "email or username already exists",
+            "successfully registered"
     ]
     logging.info(f"Posting to end point: http://{backend_service}/auth/register")
     res = requests.post(f"http://{backend_service}/auth/register", json=args)
@@ -56,7 +55,7 @@ def login_test_user(backend_service):
     }
 
     pass_msgs =  [
-        "Successfully logged in."
+        "successfully logged in"
     ]
     res = requests.post(f"http://{backend_service}/auth/login", json=args)
     resdict = res.json()
@@ -75,8 +74,7 @@ def test_user(backend_service,register_user,login_test_user):
         "X-API-KEY": login_test_user
     }
     pass_msgs =  [
-        "User data sent",
-        "User data successfully sent"
+        "user data sent"
     ]
     url = f"http://{backend_service}/api/user/profile"
     logging.info(f"Posting to end point: {url}")
@@ -112,7 +110,7 @@ def workflow_user_header(backend_service):
             "password": workflow_password
     }
     pass_msgs =  [
-        "Successfully logged in."
+        "successfully logged in"
     ]
     res = requests.post(f"http://{backend_service}/auth/login", json=args)
     resdict = res.json()
@@ -133,8 +131,7 @@ def workflow_user(backend_service,workflow_user_header):
     logging.info("Fixture: Getting workflow user")
 
     pass_msgs =  [
-        "User data sent",
-        "User data successfully sent"
+        "user data sent"
     ]
     url = f"http://{backend_service}/api/user/profile"
     logging.info(f"Posting to end point: {url}")
@@ -152,9 +149,8 @@ def harbour_camera_add(backend_service,test_user_header):
     logging.info("Fixture: add harbour camera")
     
     pass_msgs = [
-        "Camera already exist",
-        "Camera has been added",
-        "Successfully added camera"
+        "camera already exists",
+        "camera added"
     ]
     data = {
         "name": "Harbour Village Bonaire Coral Reef",
@@ -178,7 +174,7 @@ def cameras(backend_service,harbour_camera_add,test_user_header):
         headers=test_user_header)
 
     pass_msgs = [
-        "Camera data sent"
+        "camera data sent"
     ]
 
     resdict = resp.json()
@@ -204,10 +200,8 @@ def kaustfishcounter_workflow(backend_service,workflow_user,workflow_user_header
     logging.info("Fixture: add kaust fish counter workflow")
      
     pass_msgs = [
-        "Workflow already exist",
-        "Workflowe has been added.",
-        "Successfully added Workflow",
-        "Name is already being used."
+        "name already exists",
+        "workflowe added"
     ]
 
     wf = glob.glob("workflows/kaust_fish_counter_threaded_async.json")[0]
@@ -262,7 +256,7 @@ def workflows(backend_service,test_user_header):
         headers=test_user_header)
 
     pass_msgs = [
-        "Workflow data sent"
+        "workflow data sent"
     ]
 
     resdict = resp.json()
@@ -278,7 +272,7 @@ def user_media(backend_service,test_user_header):
         headers=test_user_header)
 
     pass_msgs = [
-        "User media sent"
+        "media data sent"
     ]
     resdict = resp.json()
     message = resdict["message"]
