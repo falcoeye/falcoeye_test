@@ -84,6 +84,7 @@ def test_user(backend_service,register_user,login_test_user):
     message = resdict["message"]
     assert message in pass_msgs
     user =  resdict["user"]
+    logging.info(f"test user info {user}")
     user["access_token"] = login_test_user
     return user
 
@@ -99,6 +100,17 @@ def test_user_header(test_user):
     logging.info(f"{header}")
     return header
 
+@pytest.fixture
+def test_user_header_nocontenttype(test_user):
+    logging.info("Fixture: getting test user header and token")
+    access_token = test_user.get("access_token")
+    header = {
+        "accept": "application/json",
+        "X-API-KEY": access_token
+    }
+    logging.info(f"{header}")
+    return header
+    
 @pytest.fixture
 def workflow_user_header(backend_service):
     logging.info("Fixture: Getting workflow user header")
@@ -122,6 +134,32 @@ def workflow_user_header(backend_service):
     header = {
         "accept": "application/json",
         "Content-Type": "application/json",
+        "X-API-KEY": access_token
+    }
+    return header
+
+@pytest.fixture
+def workflow_user_header_nocontenttype(backend_service):
+    logging.info("Fixture: Getting workflow user header")
+    
+    workflow_user = os.getenv("WORKFLOW_USER").strip()
+    workflow_password = os.getenv("WORKFLOW_PASSWORD").strip()
+    args = {
+            "email": workflow_user,
+            "password": workflow_password
+    }
+    pass_msgs =  [
+        "successfully logged in"
+    ]
+    res = requests.post(f"http://{backend_service}/auth/login", json=args)
+    resdict = res.json()
+    message = resdict["message"]
+    assert message in pass_msgs
+    assert "access_token" in resdict
+   
+    access_token = resdict["access_token"]
+    header = {
+        "accept": "application/json",
         "X-API-KEY": access_token
     }
     return header
@@ -193,7 +231,6 @@ def harbour_camera(cameras,test_user_header):
             break
     assert hcam is not None
     return hcam
-
 
 @pytest.fixture
 def kaustfishcounter_workflow(backend_service,workflow_user,workflow_user_header):
@@ -274,6 +311,10 @@ def user_media(backend_service,test_user_header):
     pass_msgs = [
         "media data sent"
     ]
+
+    if resp.status_code == 204:
+        logging.info("no media")
+        return
     resdict = resp.json()
     message = resdict["message"]
     assert message in pass_msgs
@@ -286,8 +327,6 @@ def harbour_video(backend_service,
     user_media,
     test_user_header):
     logging.info("Fixture: get harbour video")
-    
-    
     cam_id = harbour_camera["id"]
     hmedia = None
     logging.info(f"Harbour camera id: {cam_id}")
@@ -298,3 +337,16 @@ def harbour_video(backend_service,
 
     assert hmedia is not None
     return hmedia
+
+@pytest.fixture
+def house_cars_video(backend_service,
+    user_media,
+    test_user_header):
+    logging.info("Fixture: getting house cars video")
+    
+    if user_media is not None:
+        for m in user_media:
+            if m["tags"] == "cars,my house":
+                return m
+
+    return None
