@@ -60,7 +60,7 @@ def test_kaustfishcounter_file(backend_service,
     analysis_id = respdict["analysis"]["id"]
     condition = {
         "key":"message",
-        "value": "Analysis output not yet written",
+        "value": "no output yet",
         "oper": "!="
     }
     wait_until(f"http://{backend_service}/api/analysis/{analysis_id}/meta.json",
@@ -74,19 +74,30 @@ def test_kaustfishcounter_file(backend_service,
 def test_carcounter_file(backend_service,
     test_user,
     test_user_header,
-    car_video,
-    carcounter_workflow):
+    house_cars_video,
+    workflows):
     logging.info("Test: run car counter")
+
+    hwf = None
+    for wf in workflows:
+        if wf["name"] == "Car monitor":
+            hwf = wf
+            break
+    assert hwf is not None
 
     data = {
         "name": f"CarCounter_Test_{random_string()}",
-        "workflow_id": carcounter_workflow["id"],
+        "workflow_id": hwf["id"],
         "status": "new",
         "args": {
-            "filename": f"/user-assets/{test_user['id']}/videos/{car_video['id']}/video_original.mp4",
-            "sample_every": 30,
-            "min_score_thresh": 0.30,
-            "max_boxes": 30
+            "filename": f"/user-assets/{test_user['id']}/videos/{house_cars_video['id']}/video_original.mp4",
+            "sample_every": 1,
+            "min_score_thresh": 0.10,
+            "max_boxes": 30,
+            "min_to_trigger_in": 5,
+            "min_to_trigger_out": 5,
+            "length": 60,
+            "frequency": 1
         }
     }
     
@@ -104,13 +115,32 @@ def test_carcounter_file(backend_service,
     analysis_id = respdict["analysis"]["id"]
     condition = {
         "key":"message",
-        "value": "Analysis output not yet written",
+        "value": "no output yet",
         "oper": "!="
     }
     wait_until(f"http://{backend_service}/api/analysis/{analysis_id}/meta.json",
-    timeout=120,sleep=5,condition=condition,header=test_user_header)
+    timeout=300,sleep=5,condition=condition,header=test_user_header)
     
 
     resp = requests.get(f"http://{backend_service}/api/analysis/{analysis_id}/meta.json", headers=test_user_header)
     metacontent = resp.content
     logging.info(f"Meta content {metacontent}")
+
+def test_print_meta(backend_service,
+    test_user,
+    test_user_header):
+
+    pass_msgs = [
+        "analysis data sent"
+    ]
+
+    resp = requests.get(f"http://{backend_service}/api/analysis/", headers=test_user_header)
+    
+    assert resp.json().get("message") in pass_msgs
+
+    for a in resp.json()["analysis"]:
+        aid = a["id"]
+        aresp = requests.get(f"http://{backend_service}/api/analysis/{aid}/meta.json", headers=test_user_header)
+        logging.info(f"{aid}: {aresp.content}")
+
+

@@ -89,6 +89,13 @@
                 "disc": "Length of streaming (seconds, -1 for entire video)",
                 "source": "user",
                 "default": -1
+            },
+            {
+                "name": "frequency",
+                "type": "int",
+                "disc": "Length of streaming (seconds, -1 for entire video)",
+                "source": "user",
+                "default": 5
             }
         ],
         "nodes": [
