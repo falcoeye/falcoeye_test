@@ -14,16 +14,28 @@ logging.basicConfig(
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 
-@pytest.fixture
-def backend():
-    logging.info("Fixture: Getting backend kube")
-    backend_kube = FalcoServingKube("falcoeye-backend")
-    return backend_kube
+# @pytest.fixture
+# def backend_service():
+#     logging.info("Fixture: Getting backend service")
+#     return f"http://localhost:5000"
+
+# @pytest.fixture
+# def backend():
+#     logging.info("Fixture: Getting backend kube")
+#     backend_kube = FalcoServingKube("falcoeye-backend")
+#     return backend_kube
+
+# @pytest.fixture
+# def backend_service(backend):
+#     logging.info("Fixture: Getting backend service")
+#     service_address =  backend.get_service_address(external=True,hostname=True)
+#     logging.info(f"Backend service address: {service_address}")
+#     return f"http://{service_address}"
 
 @pytest.fixture
-def backend_service(backend):
+def backend_service():
     logging.info("Fixture: Getting backend service")
-    service_address =  backend.get_service_address(external=True,hostname=True)
+    service_address =  "https://falcoeye-backend-xbjr6s7buq-uc.a.run.app"
     logging.info(f"Backend service address: {service_address}")
     return service_address
 
@@ -40,8 +52,8 @@ def register_user(backend_service):
             "email or username already exists",
             "successfully registered"
     ]
-    logging.info(f"Posting to end point: http://{backend_service}/auth/register")
-    res = requests.post(f"http://{backend_service}/auth/register", json=args)
+    logging.info(f"Posting to end point: {backend_service}/auth/register")
+    res = requests.post(f"{backend_service}/auth/register", json=args)
     resdict = res.json()
     message = resdict["message"]
     assert message in pass_msgs
@@ -57,7 +69,7 @@ def login_test_user(backend_service):
     pass_msgs =  [
         "successfully logged in"
     ]
-    res = requests.post(f"http://{backend_service}/auth/login", json=args)
+    res = requests.post(f"{backend_service}/auth/login", json=args)
     resdict = res.json()
     message = resdict["message"]
     assert message in pass_msgs
@@ -71,12 +83,12 @@ def test_user(backend_service,register_user,login_test_user):
     header = {
         "accept": "application/json",
         "Content-Type": "application/json",
-        "X-API-KEY": login_test_user
+        "X-API-KEY": f'JWT {login_test_user}'
     }
     pass_msgs =  [
         "user data sent"
     ]
-    url = f"http://{backend_service}/api/user/profile"
+    url = f"{backend_service}/api/user/profile"
     logging.info(f"Posting to end point: {url}")
     res = requests.get(url, 
         headers=header)
@@ -95,7 +107,7 @@ def test_user_header(test_user):
     header = {
         "accept": "application/json",
         "Content-Type": "application/json",
-        "X-API-KEY": access_token
+        "X-API-KEY": f'JWT {access_token}'
     }
     logging.info(f"{header}")
     return header
@@ -106,7 +118,7 @@ def test_user_header_nocontenttype(test_user):
     access_token = test_user.get("access_token")
     header = {
         "accept": "application/json",
-        "X-API-KEY": access_token
+        "X-API-KEY": f'JWT {access_token}'
     }
     logging.info(f"{header}")
     return header
@@ -124,7 +136,7 @@ def workflow_user_header(backend_service):
     pass_msgs =  [
         "successfully logged in"
     ]
-    res = requests.post(f"http://{backend_service}/auth/login", json=args)
+    res = requests.post(f"{backend_service}/auth/login", json=args)
     resdict = res.json()
     message = resdict["message"]
     assert message in pass_msgs
@@ -134,7 +146,7 @@ def workflow_user_header(backend_service):
     header = {
         "accept": "application/json",
         "Content-Type": "application/json",
-        "X-API-KEY": access_token
+        "X-API-KEY": f'JWT {access_token}'
     }
     return header
 
@@ -151,7 +163,7 @@ def workflow_user_header_nocontenttype(backend_service):
     pass_msgs =  [
         "successfully logged in"
     ]
-    res = requests.post(f"http://{backend_service}/auth/login", json=args)
+    res = requests.post(f"{backend_service}/auth/login", json=args)
     resdict = res.json()
     message = resdict["message"]
     assert message in pass_msgs
@@ -160,7 +172,7 @@ def workflow_user_header_nocontenttype(backend_service):
     access_token = resdict["access_token"]
     header = {
         "accept": "application/json",
-        "X-API-KEY": access_token
+        "X-API-KEY": f'JWT {access_token}'
     }
     return header
 
@@ -171,7 +183,7 @@ def workflow_user(backend_service,workflow_user_header):
     pass_msgs =  [
         "user data sent"
     ]
-    url = f"http://{backend_service}/api/user/profile"
+    url = f"{backend_service}/api/user/profile"
     logging.info(f"Posting to end point: {url}")
     res = requests.get(url, 
         headers=workflow_user_header)
@@ -193,10 +205,35 @@ def harbour_camera_add(backend_service,test_user_header):
     data = {
         "name": "Harbour Village Bonaire Coral Reef",
         "streaming_type": "StreamingServer",
-        "url": "https://www.youtube.com/watch?v=tk-qJJbdOh4",
+        "url": "https://www.youtube.com/watch?v=NwWgOilQuzw&t=4s",
         "status": "RUNNING",
     }
-    resp = requests.post(f"http://{backend_service}/api/camera/", 
+    resp = requests.post(f"{backend_service}/api/camera/", 
+        json=data,headers=test_user_header)
+    
+    
+    resdict = resp.json()
+    message = resdict["message"]
+    assert message in pass_msgs
+
+@pytest.fixture
+def skitchen_camera_add(backend_service,test_user_header):
+    logging.info("Fixture: add skitchen camera")
+    
+    pass_msgs = [
+        "camera already exists",
+        "camera added"
+    ]
+    data = {
+        "name": "Skitchen Sultana Camera",
+        "streaming_type": "RTSP",
+        "host": "http://192.168.0.130/",
+        "port": 554,
+        "username":"",
+        "password":"skitchen@2022",
+        "status": "RUNNING",
+    }
+    resp = requests.post(f"{backend_service}/api/camera/", 
         json=data,headers=test_user_header)
     
     
@@ -208,7 +245,7 @@ def harbour_camera_add(backend_service,test_user_header):
 def cameras(backend_service,harbour_camera_add,test_user_header):
     logging.info("Fixture: get cameras")
     
-    resp = requests.get(f"http://{backend_service}/api/camera", 
+    resp = requests.get(f"{backend_service}/api/camera", 
         headers=test_user_header)
 
     pass_msgs = [
@@ -226,11 +263,23 @@ def harbour_camera(cameras,test_user_header):
     logging.info("Fixture: get harbour cameras")
     hcam = None
     for cam in cameras:
-        if cam["name"] == "Harbour Village Bonaire Coral Reef 2":
+        if cam["name"] == "Harbour Village Bonaire Coral Reef":
             hcam =  cam
             break
     assert hcam is not None
     return hcam
+
+@pytest.fixture
+def skitchen_camera(cameras,test_user_header):
+    logging.info("Fixture: get skitchen cameras")
+    hcam = None
+    for cam in cameras:
+        if cam["name"] == "Skitchen Sultana Camera":
+            hcam =  cam
+            break
+    assert hcam is not None
+    return hcam
+
 
 @pytest.fixture
 def kaustfishcounter_workflow(backend_service,workflow_user,workflow_user_header):
@@ -256,7 +305,7 @@ def kaustfishcounter_workflow(backend_service,workflow_user,workflow_user_header
         "results_description": wkflowdict["results_description"],
     }
 
-    resp = requests.post(f"http://{backend_service}/api/workflow/", 
+    resp = requests.post(f"{backend_service}/api/workflow/", 
         json=data, headers=workflow_user_header)
     logging.info(resp.json())
     #assert resp.status_code == 201
@@ -266,7 +315,7 @@ def kaustfishcounter_workflow(backend_service,workflow_user,workflow_user_header
     #Getting workflows
     logging.info("Geting workflows")
     
-    resp = requests.get(f"http://{backend_service}/api/workflow", 
+    resp = requests.get(f"{backend_service}/api/workflow", 
         headers=workflow_user_header)
 
     pass_msgs = [
@@ -289,7 +338,7 @@ def kaustfishcounter_workflow(backend_service,workflow_user,workflow_user_header
 def workflows(backend_service,test_user_header):
     logging.info("Fixture: get workflows")
     
-    resp = requests.get(f"http://{backend_service}/api/workflow", 
+    resp = requests.get(f"{backend_service}/api/workflow", 
         headers=test_user_header)
 
     pass_msgs = [
@@ -305,7 +354,7 @@ def workflows(backend_service,test_user_header):
 @pytest.fixture
 def user_media(backend_service,test_user_header):
     
-    resp = requests.get(f"http://{backend_service}/api/media", 
+    resp = requests.get(f"{backend_service}/api/media", 
         headers=test_user_header)
 
     pass_msgs = [
@@ -339,6 +388,41 @@ def harbour_video(backend_service,
     return hmedia
 
 @pytest.fixture
+def dinein_video(backend_service,
+    user_media,
+    test_user_header):
+    logging.info("Fixture: getting dine-in video")
+    
+    if user_media is not None:
+        for m in user_media:
+            if m["tags"] == "dinein":
+                return m
+
+@pytest.fixture
+def coffeeshop_bar_video(backend_service,
+    user_media,
+    test_user_header):
+    logging.info("Fixture: getting coffeeshop bar video")
+    
+    if user_media is not None:
+        for m in user_media:
+            if m["tags"] == "coffeeshop, behind cashier":
+                return m
+
+@pytest.fixture
+def arabian_angelfish_video(backend_service,
+    user_media,
+    test_user_header):
+    logging.info("Fixture: getting arabian angelfish video")
+    
+    if user_media is not None:
+        for m in user_media:
+            if m["tags"] == "arabian angelfish, kaust":
+                return m
+
+    return None
+
+@pytest.fixture
 def house_cars_video(backend_service,
     user_media,
     test_user_header):
@@ -347,6 +431,19 @@ def house_cars_video(backend_service,
     if user_media is not None:
         for m in user_media:
             if m["tags"] == "cars,my house":
+                return m
+
+    return None
+
+@pytest.fixture
+def lutjanis_video(backend_service,
+    user_media,
+    test_user_header):
+    logging.info("Fixture: getting lutjanis video")
+    
+    if user_media is not None:
+        for m in user_media:
+            if m["tags"] == "fish, lutjanis, moonfish":
                 return m
 
     return None

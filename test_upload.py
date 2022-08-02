@@ -8,28 +8,31 @@ import json
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+VIDEO = "arabian_angelfish.mp4"
+TAGS = "arabian angelfish, kaust"
+NOTES = "Beautiful arabian angelfish pass by KAUST camera"
 
 def test_upload_video(backend_service,
     test_user,test_user_header_nocontenttype,
     test_user_header,
-    house_cars_video):
+    arabian_angelfish_video):
     logging.info("Test: run upload video")
     
-    if house_cars_video is not None:
+    if arabian_angelfish_video is not None:
         logging.info("Delete existing instance")
         resp = requests.delete(
-            f"http://{backend_service}/api/media/video/{house_cars_video['id']}",
+            f"{backend_service}/api/media/video/{lutjanis_video['id']}",
             headers=test_user_header_nocontenttype)
         assert resp.status_code == 200
     
-    filename = f"{basedir}/media/house_cars.mp4"
+    filename = f"{basedir}/media/{VIDEO}"
     with open(filename, "rb") as f:
         files = {
             "file": (os.path.basename(filename), f, "video/mp4"),
         }
         
         resp = requests.post(
-            f"http://{backend_service}/api/upload",
+            f"{backend_service}/api/upload",
             headers=test_user_header_nocontenttype,
             files=files
         )
@@ -43,13 +46,13 @@ def test_upload_video(backend_service,
 
     video_info = {
         "camera_id": None,
-        "tags": "cars,my house",
-        "note": "Monitoring cars",
+        "tags": TAGS,
+        "note": NOTES,
         "registry_key":registry_key ,
     }
 
     resp = requests.post(
-        f"http://{backend_service}/api/media/video",
+        f"{backend_service}/api/media/video",
         data=json.dumps(video_info),
         headers=test_user_header,
     )
