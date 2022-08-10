@@ -2,7 +2,7 @@
 import pytest
 import json 
 import os
-from falcoeye_kubernetes import FalcoServingKube
+#from falcoeye_kubernetes import FalcoServingKube
 import requests
 import glob
 import logging
@@ -421,6 +421,20 @@ def arabian_angelfish_video(backend_service,
                 return m
 
     return None
+
+@pytest.fixture
+def arabian_angelfish_video_short(backend_service,
+    user_media,
+    test_user_header):
+    logging.info("Fixture: getting arabian angelfish video")
+    video = None
+    if user_media is not None:
+        for m in user_media:
+            if m["tags"] == "fish,arabian angelfish":
+                video = m
+                break
+    assert video is not None
+    return video
 
 @pytest.fixture
 def house_cars_video(backend_service,

@@ -405,3 +405,65 @@ def test_leaky_arabian_angelfish(backend_service,
     metacontent = resp.content
     logging.info(f"Meta content {metacontent}")
 
+def test_leaky_arabian_angelfish_short(backend_service,
+    test_user,
+    test_user_header,
+    arabian_angelfish_video_short,
+    workflows):
+    logging.info("Test: run arabian angelfish")
+
+    hwf = None
+    for wf in workflows:
+        if wf["name"] == "Arabian Angelfish Monitor":
+            hwf = wf
+            break
+    assert hwf is not None
+
+    data = {
+        "name": f"Arabian_Angelfish_Test_{random_string()}",
+        "workflow_id": hwf["id"],
+        "status": "new",
+        "feeds": {
+            "source": {
+                "type": "video",
+                "id": arabian_angelfish_video_short['id']
+            },
+            "params": {
+                "sample_every": 1,
+                "min_score_thresh": 0.30,
+                "max_boxes": 30,
+                "min_to_trigger_in": 5,
+                "min_to_trigger_out": 5,
+                "length": -1,
+                "frequency": 1,
+                "timed_gate_open_freq": 30,
+                "timed_gate_opened_last": 5,
+                "ntasks": 12
+            }
+        }
+    }
+    print(data)
+    pass_msgs = [
+        "analysis added"
+    ]
+
+    resp = requests.post(f"{backend_service}/api/analysis/", 
+        json=data, headers=test_user_header)
+    logging.info(resp.json())
+    respdict = resp.json()
+    assert respdict.get("message") in pass_msgs
+
+    analysis_id = respdict["analysis"]["id"]
+    condition = {
+        "key":"message",
+        "value": "no output yet",
+        "oper": "!="
+    }
+    wait_until(f"{backend_service}/api/analysis/{analysis_id}/meta.json",
+    timeout=300,sleep=5,condition=condition,header=test_user_header)
+    
+
+    resp = requests.get(f"{backend_service}/api/analysis/{analysis_id}/meta.json", headers=test_user_header)
+    metacontent = resp.content
+    logging.info(f"Meta content {metacontent}")
+
